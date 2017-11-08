@@ -262,8 +262,9 @@ int main()
 
     //turn 150 speed 570 ms 90 degree turn
    //146,150 motor turn straight
+   // does a 360 in a square
     motor_forward(0,500);
-    motor_turn(146,150,2000);
+    motor_turn(146,150,1000);
     motor_turn(150,0,570);
     motor_turn(146,150,2000);
     motor_turn(150,0,570);
@@ -271,7 +272,6 @@ int main()
     motor_turn(150,0,570);
     motor_turn(146,150,2000);
     motor_turn(150,0,570);
-    
     //motor_turn(145,150,2000);
     //motor_turn(150,0,645);
     //motor_turn(145,150,2000);
