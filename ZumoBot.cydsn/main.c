@@ -227,33 +227,93 @@ int main()
 //*/
 
 
-/*//reflectance//
+//reflectance//
+# define DELAY 5
 int main()
 {
     struct sensors_ ref;
     struct sensors_ dig;
     CyGlobalIntEnable; 
     UART_1_Start();
-  
+    int current_state = 0;
     sensor_isr_StartEx(sensor_isr_handler);
     
     reflectance_start();
 
     IR_led_Write(1);
+    CyDelay(5);
+    //valk 5800, 3630,4000,8820
+    // must 23999,
+    reflectance_set_threshold(14899 ,13814 ,13999 ,16409);
+   //raja arvo = valk + (musta-valk)/2
+    motor_start();
     for(;;)
     {
         reflectance_read(&ref);
-        printf("%d %d %d %d \r\n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
+        //printf("%d %d %d %d \r\n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
-        printf("%d %d %d %d \r\n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
+        //printf("%d %d %d %d \r\n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
+        if(dig.l1 == 1 && dig.l3 == 1 && dig.r1 == 1 && dig.r3 == 1){
+           
+            if( current_state ==0){
+               motor_turn(146,150,DELAY);
+            }
+            else if(current_state ==1){
+                 motor_turn(50,150,DELAY);
+            }
+            else if(current_state ==2){
+                 motor_turn(146,50,DELAY);
+            }
+            else if(current_state ==3){
+                motor_turn(10,150,DELAY);
+            }
+            else if(current_state ==4){
+                 motor_turn(146,10,DELAY);
+            }
+            
+        }
+        else if(dig.l1 == 0 && dig.r1 == 0 ){
+           
+            if(current_state == 0)
+            {
+              motor_turn(200,203,DELAY);
+            }
+            else
+            {
+                 motor_turn(146,150,DELAY);
+            }
+            current_state = 0;
+        }
+        else if(dig.l1 == 0 && dig.r1 == 1){
+            motor_turn(50,150,DELAY);
+            current_state = 1;
+        }
+         else if(dig.l1 == 1 && dig.r1 == 0){
+            motor_turn(146,50,DELAY);
+             current_state = 2;
+        }
+        else if(dig.l3 == 0){
+            motor_turn(10,150,DELAY);
+             current_state = 3;
+        }
+        else if(dig.r3 == 0){
+            motor_turn(146,10,DELAY);
+             current_state = 4;
+        }
         
-        CyDelay(500);
+        CyDelay(DELAY);
+    }
+     while(1){
+       //lue anturit
+       // ohjaa moottoria
+       //odota
+        
     }
 }   
-//*/
+//
 
   //motor//
-int main()
+/*int main()
 {
     CyGlobalIntEnable; 
     UART_1_Start();
@@ -284,7 +344,7 @@ int main()
     {
 
     }
-}
+}*/
 //
     
 
