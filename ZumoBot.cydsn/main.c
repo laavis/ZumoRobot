@@ -133,8 +133,10 @@ int main()
  }   
 //*/
 
+void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
+
 # define DELAY 10
-# define SPEED 50
+# define SPEED 100
 int main()
 {
     struct sensors_ ref;
@@ -202,9 +204,10 @@ int main()
         CyDelay(10);
     }
     
-    //int current_state = 0;
-    float division;
+    int currentState;
+    float leftDiv, rightDiv;
     motor_start();
+    int leftSpeed, rightSpeed;
     for(;;)
     {
         reflectance_read(&ref);
@@ -212,16 +215,54 @@ int main()
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
         printf("%d %d %d %d \n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
         
-        division = (float)ref.l1/ref.r1;
+        checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
+        if (ref.l1 > ref.r1) {
+            leftDiv = (float)ref.r1 / ref.l1;
+            rightDiv = 1;
+        }
+        else {
+            rightDiv = (float)ref.l1 / ref.r1;
+            leftDiv = 1;
+        }
         
-        int leftSpeed = SPEED* (1/division);
-        int rightSpeed = SPEED* division;
-        printf("Division: %f - Right: %d - Left: %d\n", division, rightSpeed, leftSpeed);
-        CyDelay(DELAY);
+        if (currentState == 0) {
+            leftSpeed = SPEED;
+            rightSpeed = 0;
+        }
+        else if (currentState == 1) {
+            leftSpeed = 0;
+            rightSpeed = SPEED;
+        }
+        else {
+            leftSpeed = SPEED * leftDiv;
+            rightSpeed = SPEED * rightDiv;
+        }
         
+        printf("LeftDiv: %5f RightDiv: %5f - Right: %5d - Left: %5d\n", leftDiv, rightDiv, rightSpeed, leftSpeed);
         motor_turn(leftSpeed, rightSpeed, DELAY);
-        
+        CyDelay(DELAY);
     }
+}
+
+int previous;
+void checkState(int *state, uint16 *l1,uint16 *r1){ //definition
+    if (*l1 == 1 && *r1 == 1) {
+        if (previous == 0) {
+            *state = 0; //turn right
+        }
+        else {
+            *state = 1;  //turn left
+        }
+    }
+    else if (*l1 == 1) {
+        previous = 0; //turn right if line lost
+        *state = -1;
+    }
+    else if (*r1 == 1) {
+        previous = 1;   //turn left if line lost
+        *state = -1;
+    }
+    else *state = -1; //all black, dont turn
 }
 
 #if 0
