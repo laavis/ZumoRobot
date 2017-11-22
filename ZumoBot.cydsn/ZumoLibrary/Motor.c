@@ -40,7 +40,34 @@ void motor_forward(uint8 speed,uint32 delay)
     PWM_WriteCompare2(speed); 
     CyDelay(delay);
 }
-
+/*
+* @brief Moving one left motor backwards and right motor forward to make a sharp turn
+* @param    uint8 l_speed : left motor speed value
+* @param    uint8 r_speed : right motor speed value
+* @param    uint32 delay : delay time
+*/
+void motor_sharpleft(uint8 l_speed,uint8 r_speed, uint32 delay)
+{
+    MotorDirLeft_Write(1);
+    MotorDirRight_Write(0);
+    PWM_WriteCompare1(l_speed); 
+    PWM_WriteCompare2(r_speed); 
+    CyDelay(delay);
+}
+/*
+* @brief Moving one right motor backwards and left motor forward to make a sharp turn
+* @param    uint8 l_speed : left motor speed value
+* @param    uint8 r_speed : right motor speed value
+* @param    uint32 delay : delay time
+*/
+void motor_sharpright(uint8 l_speed,uint8 r_speed, uint32 delay)
+{
+    MotorDirLeft_Write(0);
+    MotorDirRight_Write(1);
+    PWM_WriteCompare1(l_speed); 
+    PWM_WriteCompare2(r_speed); 
+    CyDelay(delay);
+}
 
 /**
 * @brief    Moving motors to make a turn 
@@ -51,6 +78,8 @@ void motor_forward(uint8 speed,uint32 delay)
 */
 void motor_turn(uint8 l_speed, uint8 r_speed, uint32 delay)
 {
+    MotorDirLeft_Write(0);
+    MotorDirRight_Write(0);
     PWM_WriteCompare1(l_speed); 
     PWM_WriteCompare2(r_speed); 
     CyDelay(delay);
