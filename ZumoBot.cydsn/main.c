@@ -206,6 +206,7 @@ int main()
     int stop = 0;
     int currentState;
     int onLine =0;
+    float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
     int leftSpeed, rightSpeed;
@@ -218,11 +219,15 @@ int main()
         
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
         if (ref.l1 > ref.r1) {
-            leftDiv = (float)ref.r1 / ref.l1;
+            /*rightDiv = 1;
+            leftDiv = (ref.l1 -ref.r1)*kP;*/
+            leftDiv = ((float)ref.r1 / ref.l1)*kP;
             rightDiv = 1;
         }
         else {
-            rightDiv = (float)ref.l1 / ref.r1;
+            /*rightDiv = (ref.r1- ref.l1)*kP;
+            leftDiv = 1;*/
+            rightDiv = ((float)ref.l1 / ref.r1)*kP;
             leftDiv = 1;
         }
         if(dig.r3 == 0 && dig.l3 == 0 && onLine == 0 )
@@ -240,13 +245,13 @@ int main()
         }
         
         if (currentState == 0) {
-            leftSpeed = SPEED*leftDiv;
-            rightSpeed = SPEED*rightDiv;
+            leftSpeed = SPEED;
+            rightSpeed = SPEED;
             motor_sharpright(leftSpeed,rightSpeed,DELAY);
         }
         else if (currentState == 1) {
-            leftSpeed = SPEED*leftDiv;
-            rightSpeed = SPEED*rightDiv;
+            leftSpeed = SPEED;
+            rightSpeed = SPEED;
             motor_sharpleft(leftSpeed,rightSpeed,DELAY);
         }
         else if(currentState == -1){
