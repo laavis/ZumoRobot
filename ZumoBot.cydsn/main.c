@@ -176,7 +176,7 @@ int main()
     IR_led_Write(0);
     
     //calculate and set sensor thresholds
-    reflectance_set_threshold(white.l3 + black.l3/2 ,white.l1 + black.l1/2 ,white.r1 + black.r1/2 ,white.r3 + black.r3/2);
+    reflectance_set_threshold(white.l3 + (black.l3 - white.l3)/2 ,white.l1 + (black.l1 - white.l1)/2 ,white.r1 + (black.r1 - white.r1)/2 ,white.r3 + (black.r3 - white.r3)/2);
     
     CyDelay(1000);
     
