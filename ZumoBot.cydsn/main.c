@@ -135,8 +135,8 @@ int main()
 
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
-# define DELAY 10
-# define SPEED 255
+# define DELAY 1
+# define SPEED 200
 int main()
 {
     struct sensors_ ref;
@@ -193,7 +193,7 @@ int main()
     motor_start();
     
     do {
-        motor_turn(SPEED, SPEED, DELAY);    //drive to start line
+        motor_turn(100, 100, DELAY);    //drive to start line
         reflectance_digital(&dig);
     } while(dig.l3 == 1 && dig.r3 == 1);    //outer sensors are white
     
@@ -209,13 +209,16 @@ int main()
     float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
-    int leftSpeed, rightSpeed;
+    int leftSpeed = 0, rightSpeed = 0;
+    
+    motor_turn(SPEED, SPEED, 200);
+    
     for(;;)
     {
         reflectance_read(&ref);
-        printf("%d %d %d %d \n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
+        //printf("%d %d %d %d \n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
-        printf("%d %d %d %d \n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
+        //printf("%d %d %d %d \n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
         
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
         if (ref.l1 > ref.r1) {
@@ -230,12 +233,13 @@ int main()
             rightDiv = ((float)ref.l1 / ref.r1)*kP;
             leftDiv = 1;
         }
+        
         if(dig.r3 == 0 && dig.l3 == 0 && onLine == 0 )
         {
             stop++;
             onLine =1;
-            if(stop == 2){
-                motor_forward(0,DELAY);
+            if(stop >= 2){
+                //motor_forward(0,DELAY);
                 motor_stop();
             }
         }
@@ -244,23 +248,23 @@ int main()
             onLine = 0;   
         }
         
-        if (currentState == 0) {
+        if (currentState == 0) { //turn right sharp
             leftSpeed = SPEED;
-            rightSpeed = SPEED;
+            rightSpeed = SPEED/4;
             motor_sharpright(leftSpeed,rightSpeed,DELAY);
         }
-        else if (currentState == 1) {
-            leftSpeed = SPEED;
+        else if (currentState == 1) {   //turn left sharp
+            leftSpeed = SPEED/4;
             rightSpeed = SPEED;
             motor_sharpleft(leftSpeed,rightSpeed,DELAY);
         }
-        else if(currentState == -1){
+        else if(currentState == -1){    //adjust turn
             leftSpeed = SPEED * leftDiv;
             rightSpeed = SPEED * rightDiv;
             motor_turn(leftSpeed, rightSpeed, DELAY);
         }
-        else if(currentState == -2){
-            motor_turn(SPEED, SPEED, DELAY);
+        else if(currentState == -2){    //forward
+            motor_turn(SPEED * leftDiv, SPEED * rightDiv, DELAY);
         }
        
         
