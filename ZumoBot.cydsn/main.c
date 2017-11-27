@@ -136,7 +136,7 @@ int main()
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
 # define DELAY 1
-# define SPEED 200
+# define SPEED 255
 int main()
 {
     struct sensors_ ref;
@@ -154,7 +154,7 @@ int main()
     //valk 5800, 3630,4000,8820
     // must 23999,
     //reflectance_set_threshold(14899 ,13814 ,13999 ,16409);
-    //raja arvo = valk + (musta-valk)/2
+    //raja arvo = valk + (musta - valk) / 2
     
     printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
@@ -176,7 +176,7 @@ int main()
     IR_led_Write(0);
     
     //calculate and set sensor thresholds
-    reflectance_set_threshold(white.l3 + black.l3/2 ,white.l1 + black.l1/2 ,white.r1 + black.r1/2 ,white.r3 + black.r3/2);
+    reflectance_set_threshold(white.l3 + (black.l3 - white.l3)/2 ,white.l1 + (black.l1 - white.l1)/2 ,white.r1 + (black.r1 - white.r1)/2 ,white.r3 + (black.r3 - white.r3)/2);
     
     CyDelay(1000);
     
@@ -206,7 +206,7 @@ int main()
     int stop = 0;
     int currentState;
     int onLine =0;
-    float kP = 1.15;
+    //float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
     int leftSpeed = 0, rightSpeed = 0;
@@ -222,15 +222,11 @@ int main()
         
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
         if (ref.l1 > ref.r1) {
-            /*rightDiv = 1;
-            leftDiv = (ref.l1 -ref.r1)*kP;*/
-            leftDiv = ((float)ref.r1 / ref.l1)*kP;
+            leftDiv = ((float)ref.r1 / ref.l1);
             rightDiv = 1;
         }
         else {
-            /*rightDiv = (ref.r1- ref.l1)*kP;
-            leftDiv = 1;*/
-            rightDiv = ((float)ref.l1 / ref.r1)*kP;
+            rightDiv = ((float)ref.l1 / ref.r1);
             leftDiv = 1;
         }
         
@@ -268,7 +264,7 @@ int main()
         }
        
         
-        printf("LeftDiv: %5f RightDiv: %5f - Right: %5d - Left: %5d\n", leftDiv, rightDiv, rightSpeed, leftSpeed);
+        //printf("LeftDiv: %5f RightDiv: %5f - Right: %5d - Left: %5d\n", leftDiv, rightDiv, rightSpeed, leftSpeed);
         
         CyDelay(DELAY);
     }
