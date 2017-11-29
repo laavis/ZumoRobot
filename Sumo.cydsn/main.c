@@ -136,9 +136,10 @@ int main()
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
 # define DELAY 5
-# define SPEED 100
+# define SPEED 200
 int main()
 {
+    
     struct sensors_ ref;
     struct sensors_ dig;
     struct sensors_ white;
@@ -148,7 +149,28 @@ int main()
     sensor_isr_StartEx(sensor_isr_handler);
     Ultra_Start();
     reflectance_start();
-
+    unsigned int IR_val;
+    int pressed = 0;
+    int mode = 0;
+    /*for(;;){
+        printf("%f\n",Ultra_GetDistance());
+        CyDelay(200);
+    }*/
+    /*for(;;)
+        {
+           IR_val = get_IR();
+           printf("%x\r\n\n",IR_val);
+       
+        } */
+    
+     /*while(pressed == 0){
+        if(!IR_receiver_Read()== 1){
+        pressed = 1;}
+       //wait
+        
+    }*/
+    printf("Success");
+        
     IR_led_Write(1);
     //CyDelay(5);
     //valk 5800, 3630,4000,8820
@@ -182,6 +204,8 @@ int main()
     
     IR_led_Write(1);
     printf("Press button to drive to startline.\n");
+    
+    
     while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
     }
@@ -194,24 +218,29 @@ int main()
     
     do {
         motor_turn(100, 100, DELAY);    //drive to start line
+        reflectance_read(&ref);
         reflectance_digital(&dig);
     } while(dig.l3 == 1 && dig.r3 == 1);    //outer sensors are white
     
     motor_stop();
     
-    printf("Press button to start race.\n");
-    while(SW1_Read() == 1) {    //wait till button is pressed
+    printf("Press button to begin battle.\n");
+    /*while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
+    }*/
+     while(pressed == 0){
+        IR_val = get_IR();
+        if(IR_val){
+            pressed = 1;
+        }
     }
-    int stop = 0;
-    int currentState;
-    int onLine =0;
+   printf("Great");
     float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
-    int leftSpeed = 0, rightSpeed = 0;
+    motor_forward(SPEED,400);
     
-    //motor_turn(SPEED, SPEED, 200);
+    
     
     for(;;)
     {
@@ -231,20 +260,47 @@ int main()
             rightDiv = ((float)ref.l1 / ref.r1)*kP;
             leftDiv = 1;
         }*/
-         printf("distance = %5.0f\r\n", Ultra_GetDistance());
-       
-        if(Ultra_GetDistance() <7){
+         
+        if(dig.l1 == 0 && dig.r1 == 0){
+            motor_backward(SPEED,500);
+            CyDelay(500);
+        }
+        else if(dig.r3 == 0)
+        {
+            motor_sharpleft(SPEED,SPEED,200);
+            CyDelay(200);
+            mode = 1;
+        }
+        else if(dig.l3 == 0)
+        {
+            motor_sharpright(SPEED,SPEED,200);
+            CyDelay(200);
+            mode = 1;
+        }
+        else if(Ultra_GetDistance() <15){
             motor_forward(SPEED,DELAY);
+             CyDelay(DELAY);
         }
         else{
-            motor_sharpleft(SPEED,SPEED,DELAY);
+            if(mode == 0){
+                  motor_sharpleft(SPEED,SPEED,DELAY);
+                CyDelay(DELAY);
+            }
+            else if(mode == 1){
+            motor_turn(SPEED,SPEED,DELAY);
+            CyDelay(DELAY);
+            }
+            else if(mode == 2){
+            motor_sharpright(SPEED,SPEED,DELAY);
+             CyDelay(DELAY);
+            }
         }
         
       
         
 
         
-        CyDelay(DELAY);
+       
     }
 }
 

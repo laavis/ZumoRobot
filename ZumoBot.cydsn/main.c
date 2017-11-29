@@ -146,9 +146,9 @@ int main()
     CyGlobalIntEnable; 
     UART_1_Start();
     sensor_isr_StartEx(sensor_isr_handler);
-    
+    unsigned int IR_val;
     reflectance_start();
-
+    int pressed = 0;
     IR_led_Write(1);
     //CyDelay(5);
     //valk 5800, 3630,4000,8820
@@ -185,7 +185,6 @@ int main()
     while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
     }
-    IR_led_Write(0);
     
     CyDelay(500);
     
@@ -200,8 +199,14 @@ int main()
     motor_stop();
     
     printf("Press button to start race.\n");
-    while(SW1_Read() == 1) {    //wait till button is pressed
+    /*while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
+    }*/
+    while(pressed == 0){
+    IR_val = get_IR();
+        if(IR_val){
+            pressed = 1;
+        }
     }
     int stop = 0;
     int currentState;
