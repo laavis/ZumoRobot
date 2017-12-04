@@ -41,6 +41,8 @@
 #include "IR.h"
 #include "Ambient.h"
 #include "Beep.h"
+#include <time.h>
+#include <stdlib.h>
 
 int rread(void);
 
@@ -134,7 +136,6 @@ int main()
 //*/
 
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
-
 # define DELAY 5
 # define SPEED 200
 int main()
@@ -151,7 +152,9 @@ int main()
     reflectance_start();
     unsigned int IR_val;
     int pressed = 0;
-    int mode = 0;
+    int mode = 0; 
+    srand(time(NULL)); 
+    int r= rand() %80;
     /*for(;;){
         printf("%f\n",Ultra_GetDistance());
         CyDelay(200);
@@ -244,7 +247,7 @@ int main()
     
     for(;;)
     {
-        
+       
         reflectance_read(&ref);
         //printf("%d %d %d %d \n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
@@ -282,7 +285,8 @@ int main()
              CyDelay(DELAY);
         }
         else{
-            if(mode == 0){
+            r = rand() % 80;
+            if(mode == 3){
                   motor_sharpleft(SPEED,SPEED,DELAY);
                 CyDelay(DELAY);
             }
@@ -293,6 +297,9 @@ int main()
             else if(mode == 2){
             motor_sharpright(SPEED,SPEED,DELAY);
              CyDelay(DELAY);
+            }
+            if(r>0 && r<4){
+            mode = r;
             }
         }
         
