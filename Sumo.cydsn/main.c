@@ -136,7 +136,7 @@ int main()
 //*/
 
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
-# define DELAY 5
+# define DELAY 1
 # define SPEED 200
 int main()
 {
@@ -220,7 +220,7 @@ int main()
     motor_start();
     
     do {
-        motor_turn(100, 100, DELAY);    //drive to start line
+        motor_turn(100, 100, 5);    //drive to start line
         reflectance_read(&ref);
         reflectance_digital(&dig);
     } while(dig.l3 == 1 && dig.r3 == 1);    //outer sensors are white
@@ -228,9 +228,7 @@ int main()
     motor_stop();
     
     printf("Press button to begin battle.\n");
-    /*while(SW1_Read() == 1) {    //wait till button is pressed
-        CyDelay(10);
-    }*/
+    
      while(pressed == 0){
         IR_val = get_IR();
         if(IR_val){
@@ -285,20 +283,28 @@ int main()
              CyDelay(DELAY);
         }
         else{
-            r = rand() % 80;
-            if(mode == 3){
-                  motor_sharpleft(SPEED,SPEED,DELAY);
+            r = rand() % 400;
+            if(mode == 3 ){
+                motor_sharpleft(SPEED,SPEED,DELAY);
                 CyDelay(DELAY);
             }
-            else if(mode == 1){
+            else if(mode == 1|| mode == 2){
             motor_turn(SPEED,SPEED,DELAY);
             CyDelay(DELAY);
             }
-            else if(mode == 2){
+            else if(mode == 4){
             motor_sharpright(SPEED,SPEED,DELAY);
              CyDelay(DELAY);
             }
-            if(r>0 && r<4){
+            else if(mode == 5){
+            motor_sharpleft(SPEED/2,SPEED,DELAY);
+             CyDelay(DELAY);
+            }
+             else if(mode == 6){
+            motor_sharpright(SPEED,SPEED/2,DELAY);
+             CyDelay(DELAY);
+            }
+            if(r>0 && r<7){
             mode = r;
             }
         }
