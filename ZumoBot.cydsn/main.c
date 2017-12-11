@@ -101,38 +101,6 @@ int rread(void);
  }  */ 
 //*/
 
-//ultra sonic sensor//
-/*
-int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    Ultra_Start();                          // Ultra Sonic Start function
-    while(1) {
-        //If you want to print out the value  
-        printf("distance = %5.0f\r\n", Ultra_GetDistance());
-        CyDelay(1000);
-    }
-}   
-//*/
-
-//IR receiver//
-/*
-int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    
-    unsigned int IR_val; 
-    
-    for(;;)
-    {
-       IR_val = get_IR();
-       printf("%x\r\n\n",IR_val);
-    }    
- }   
-//*/
-
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
 # define DELAY 1
@@ -150,11 +118,6 @@ int main()
     reflectance_start();
     int pressed = 0;
     IR_led_Write(1);
-    //CyDelay(5);
-    //valk 5800, 3630,4000,8820
-    // must 23999,
-    //reflectance_set_threshold(14899 ,13814 ,13999 ,16409);
-    //raja arvo = valk + (musta - valk) / 2
     
     printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
@@ -199,9 +162,6 @@ int main()
     motor_stop();
     
     printf("Press button to start race.\n");
-    /*while(SW1_Read() == 1) {    //wait till button is pressed
-        CyDelay(10);
-    }*/
     while(pressed == 0){
     IR_val = get_IR();
         if(IR_val){
@@ -211,7 +171,6 @@ int main()
     int stop = 0;
     int currentState;
     int onLine =0;
-    //float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
     int leftSpeed = 0, rightSpeed = 0;
@@ -220,13 +179,10 @@ int main()
     
     for(;;)
     {
-        reflectance_read(&ref);
-        //printf("%d %d %d %d \n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
+        reflectance_read(&ref);//print out each period of reflectance sensors  
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
-        //printf("%d %d %d %d \n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
-        
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
-        if (ref.l1 > ref.r1) {
+        if (ref.l1 > ref.r1) { // adjust the values of the turn speeds depending on the sharpness of the turn by creating leftDiv and rightDiv
             leftDiv = ((float)ref.r1 / ref.l1);
             rightDiv = 1;
         }
@@ -235,16 +191,15 @@ int main()
             leftDiv = 1;
         }
         
-        if(dig.r3 == 0 && dig.l3 == 0 && onLine == 0 )
+        if(dig.r3 == 0 && dig.l3 == 0 && onLine == 0 ) // when the leftmost and the rightmost and the zumo enter the black line, if it is the last line the zumo stops
         {
             stop++;
             onLine =1;
             if(stop >= 2){
-                //motor_forward(0,DELAY);
                 motor_stop();
             }
         }
-        if(dig.r3 == 1 && dig.l3 == 1 && onLine == 1)
+        if(dig.r3 == 1 && dig.l3 == 1 && onLine == 1) // when the outer sensers of the zumo go on white after the black line set onLine to 0
         {
             onLine = 0;   
         }
@@ -267,10 +222,6 @@ int main()
         else if(currentState == -2){    //forward
             motor_turn(SPEED * leftDiv, SPEED * rightDiv, DELAY);
         }
-       
-        
-        //printf("LeftDiv: %5f RightDiv: %5f - Right: %5d - Left: %5d\n", leftDiv, rightDiv, rightSpeed, leftSpeed);
-        
         CyDelay(DELAY);
     }
 }

@@ -103,41 +103,11 @@ int rread(void);
  }  */ 
 //*/
 
-//ultra sonic sensor//
-/*
-int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    Ultra_Start();                          // Ultra Sonic Start function
-    while(1) {
-        //If you want to print out the value  
-        printf("distance = %5.0f\r\n", Ultra_GetDistance());
-        CyDelay(1000);
-    }
-}   
-//*/
 
-//IR receiver//
-/*
-int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    
-    unsigned int IR_val; 
-    
-    for(;;)
-    {
-       IR_val = get_IR();
-       printf("%x\r\n\n",IR_val);
-    }    
- }   
-//*/
 
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 # define DELAY 1
-# define SPEED 200
+# define SPEED 255
 int main()
 {
     
@@ -153,33 +123,10 @@ int main()
     unsigned int IR_val;
     int pressed = 0;
     int mode = 0; 
-    srand(time(NULL)); 
-    int r= rand() %80;
-    /*for(;;){
-        printf("%f\n",Ultra_GetDistance());
-        CyDelay(200);
-    }*/
-    /*for(;;)
-        {
-           IR_val = get_IR();
-           printf("%x\r\n\n",IR_val);
-       
-        } */
-    
-     /*while(pressed == 0){
-        if(!IR_receiver_Read()== 1){
-        pressed = 1;}
-       //wait
-        
-    }*/
-    printf("Success");
-        
+    srand(time(NULL)); //initializing the random seed
+    int r =1; //initializing r as a random number
+  
     IR_led_Write(1);
-    //CyDelay(5);
-    //valk 5800, 3630,4000,8820
-    // must 23999,
-    //reflectance_set_threshold(14899 ,13814 ,13999 ,16409);
-    //raja arvo = valk + (musta-valk)/2
     
     printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
@@ -188,7 +135,7 @@ int main()
         printf("%5d %5d %5d %5d\r", white.l3, white.l1, white.r1, white.r3);
     }
     IR_led_Write(0);
-
+    
     CyDelay(1000);  //wait 5 sec so that user does not read black as well by accident
     
     IR_led_Write(1);
@@ -235,108 +182,83 @@ int main()
             pressed = 1;
         }
     }
-   printf("Great");
+   
     float kP = 1.15;
     float leftDiv, rightDiv;
     motor_start();
     motor_forward(SPEED,400);
-    
-    
-    
+  
     for(;;)
     {
        
-        reflectance_read(&ref);
-        //printf("%d %d %d %d \n", ref.l3, ref.l1, ref.r1, ref.r3);       //print out each period of reflectance sensors
-        reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
-        //printf("%d %d %d %d \n", dig.l3, dig.l1, dig.r1, dig.r3);        //print out 0 or 1 according to results of reflectance period
-        
-        //checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
-        /*if (ref.l1 > ref.r1) {
-            
-            leftDiv = ((float)ref.r1 / ref.l1)*kP;
-            rightDiv = 1;
-        }
-        else {
-            rightDiv = ((float)ref.l1 / ref.r1)*kP;
-            leftDiv = 1;
-        }*/
-         
-        if(dig.l1 == 0 && dig.r1 == 0){
+        reflectance_read(&ref);  //read out each period of reflectance sensors
+        reflectance_digital(&dig);  //read 0 or 1 according to results of reflectance period    
+        if(dig.l1 == 0 && dig.r1 == 0){ // if both of the middle sensors are on black go backwards for 500 ms
             motor_backward(SPEED,500);
             CyDelay(500);
+            
         }
-        else if(dig.r3 == 0)
+        else if(dig.r3 == 0)//if only the far right sensor is on black turn left sharp for 100  ms or 90 degrees
         {
-            motor_sharpleft(SPEED,SPEED,200);
+            motor_sharpleft(SPEED,SPEED,100);
+            CyDelay(100);
+             motor_forward(SPEED,200);
             CyDelay(200);
-            mode = 1;
         }
-        else if(dig.l3 == 0)
+        else if(dig.l3 == 0) //if only the far left sensor is on black turn right sharp for 100  ms or 90 degrees
         {
-            motor_sharpright(SPEED,SPEED,200);
+            motor_sharpright(SPEED,SPEED,100);
+            CyDelay(100);
+            motor_forward(SPEED,200);
             CyDelay(200);
-            mode = 1;
+           
         }
-        else if(Ultra_GetDistance() <15){
+        else if(dig.r1 == 0){ // if the right middle sensor is on black turn sharp left for 180 ms or 180 degrees
+            motor_sharpleft(SPEED,SPEED,180);
+            CyDelay(180);
+            motor_forward(SPEED,200);
+            CyDelay(200);
+        }
+        else if(dig.l1 == 0){ // if the left middle sensor is on black turn sharp right for 180 ms or 180 degrees
+            motor_sharpright(SPEED,SPEED,180);
+            CyDelay(180);
+            motor_forward(SPEED,200);
+            CyDelay(200);
+            
+        }
+        else if(Ultra_GetDistance() <15){ // if the ultrasound gets  a distance of under 15 centimeters to an object(hopefully another zumo) then it goes straight towards it and tries to push it out
             motor_forward(SPEED,DELAY);
              CyDelay(DELAY);
         }
-        else{
-            r = rand() % 400;
-            if(mode == 3 ){
+        else{ // set a random mode that do different things
+            r = rand() % 700; // r is a random number from 0 to 500 
+            if(mode == 3 ){ // spin in place to the left
                 motor_sharpleft(SPEED,SPEED,DELAY);
                 CyDelay(DELAY);
             }
-            else if(mode == 1|| mode == 2){
+            else if(mode == 1|| mode == 2){// go straight forward
             motor_turn(SPEED,SPEED,DELAY);
             CyDelay(DELAY);
             }
-            else if(mode == 4){
+            else if(mode == 4){// spin in place towards the right
             motor_sharpright(SPEED,SPEED,DELAY);
              CyDelay(DELAY);
             }
-            else if(mode == 5){
-            motor_sharpleft(SPEED/2,SPEED,DELAY);
+            else if(mode == 5){ // turn in a small circle to the left
+            motor_sharpleft(50,SPEED,DELAY);
              CyDelay(DELAY);
             }
-             else if(mode == 6){
-            motor_sharpright(SPEED,SPEED/2,DELAY);
+             else if(mode == 6){ // turn in a small circle towards the right
+            motor_sharpright(SPEED,50,DELAY);
              CyDelay(DELAY);
             }
-            if(r>0 && r<7){
-            mode = r;
+            if(r>0 && r<7){// if the mode exists go set mode to the value of r
+            mode = r; 
             }
         }
-        
-      
-        
-
-        
-       
     }
 }
 
-int previous;
-/*void checkState(int *state, uint16 *l1,uint16 *r1){ //definition
-    if (*l1 == 1 && *r1 == 1) {
-        if (previous == 0) {
-            *state = 0; //turn right
-        }
-        else {
-            *state = 1;  //turn left
-        }
-    }
-    else if (*l1 == 1) {
-        previous = 0; //turn right if line lost
-        *state = -1;
-    }
-    else if (*r1 == 1) {
-        previous = 1;   //turn left if line lost
-        *state = -1;
-    }
-    else *state = -2; //all black, dont turn
-}*/
 
 #if 0
 int rread(void)
