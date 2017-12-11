@@ -50,57 +50,6 @@ int rread(void);
  * @details  ** You should enable global interrupt for operating properly. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-
-//battery level//
-/*int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    ADC_Battery_Start();        
-    int16 adcresult =0;
-    float volts = 0.0;
-    int boolean = 0;
-
-    printf("\nBoot\n");
-
-    //BatteryLed_Write(1); // Switch led on 
-    BatteryLed_Write(0); // Switch led off 
-    //uint8 button;
-    //button = SW1_Read(); // read SW1 on pSoC board
-
-    for(;;)
-    {
-        
-        ADC_Battery_StartConvert();
-        
-        if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
-            adcresult = ADC_Battery_GetResult16();
-            volts = (float32)adcresult*7.522/4095;
-            //volts = ADC_Battery_CountsTo_Volts(adcresult);                  // convert value to Volts
-        
-            // If you want to print value
-            printf("%d %f\r\n",adcresult, volts);
-        }
-       
-        if(volts<4){
-            if(boolean == 0){
-            BatteryLed_Write(1);
-            boolean =1;
-            }
-            else{
-             BatteryLed_Write(0);
-            boolean =0;}
-            
-
-        }
-        if(volts>=4){
-        BatteryLed_Write(0);}
-         CyDelay(500);
-        
-    }
- }  */ 
-//*/
-
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
 # define DELAY 1
@@ -113,12 +62,27 @@ int main()
     struct sensors_ black;
     CyGlobalIntEnable; 
     UART_1_Start();
+    ADC_Battery_Start(); 
     sensor_isr_StartEx(sensor_isr_handler);
     unsigned int IR_val;
     reflectance_start();
     int pressed = 0;
     IR_led_Write(1);
-    
+    int16 adcresult =0;
+    float volts = 0.0;
+    int boolean = 0;
+     ADC_Battery_StartConvert();
+        
+        if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
+            adcresult = ADC_Battery_GetResult16();
+            volts = (float32)adcresult*7.522/4095;
+        }
+        if(volts<4){
+           BatteryLed_Write(1);
+        }
+        else{
+           BatteryLed_Write(0);
+        }
     printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
@@ -161,7 +125,7 @@ int main()
     
     motor_stop();
     
-    printf("Press button to start race.\n");
+    printf("Get ir signal to start race.\n");
     while(pressed == 0){
     IR_val = get_IR();
         if(IR_val){
@@ -179,6 +143,12 @@ int main()
     
     for(;;)
     {
+        if(volts<4){
+            BatteryLed_Write(1);
+        }
+        else{
+             BatteryLed_Write(0);
+        }
         reflectance_read(&ref);//print out each period of reflectance sensors  
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
@@ -203,7 +173,6 @@ int main()
         {
             onLine = 0;   
         }
-        
         if (currentState == 0) { //turn right sharp
             leftSpeed = SPEED;
             rightSpeed = SPEED/4;

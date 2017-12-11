@@ -52,60 +52,6 @@ int rread(void);
  * @details  ** You should enable global interrupt for operating properly. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-
-//battery level//
-/*int main()
-{
-    CyGlobalIntEnable; 
-    UART_1_Start();
-    ADC_Battery_Start();        
-    int16 adcresult =0;
-    float volts = 0.0;
-    int boolean = 0;
-
-    printf("\nBoot\n");
-
-    //BatteryLed_Write(1); // Switch led on 
-    BatteryLed_Write(0); // Switch led off 
-    //uint8 button;
-    //button = SW1_Read(); // read SW1 on pSoC board
-
-    for(;;)
-    {
-        
-        ADC_Battery_StartConvert();
-        
-        if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
-            adcresult = ADC_Battery_GetResult16();
-            volts = (float32)adcresult*7.522/4095;
-            //volts = ADC_Battery_CountsTo_Volts(adcresult);                  // convert value to Volts
-        
-            // If you want to print value
-            printf("%d %f\r\n",adcresult, volts);
-        }
-       
-        if(volts<4){
-            if(boolean == 0){
-            BatteryLed_Write(1);
-            boolean =1;
-            }
-            else{
-             BatteryLed_Write(0);
-            boolean =0;}
-            
-
-        }
-        if(volts>=4){
-        BatteryLed_Write(0);}
-         CyDelay(500);
-        
-    }
- }  */ 
-//*/
-
-
-
-void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 # define DELAY 1
 # define SPEED 255
 int main()
@@ -116,6 +62,9 @@ int main()
     struct sensors_ white;
     struct sensors_ black;
     CyGlobalIntEnable; 
+    ADC_Battery_Start();    
+    int16 adcresult =0;
+    float volts = 0.0;
     UART_1_Start();
     sensor_isr_StartEx(sensor_isr_handler);
     Ultra_Start();
@@ -125,9 +74,19 @@ int main()
     int mode = 0; 
     srand(time(NULL)); //initializing the random seed
     int r =1; //initializing r as a random number
-  
     IR_led_Write(1);
-    
+    ADC_Battery_StartConvert();
+        
+        if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
+            adcresult = ADC_Battery_GetResult16();
+            volts = (float32)adcresult*7.522/4095;
+        }
+        if(volts<4){
+           BatteryLed_Write(1);
+        }
+        else{
+           BatteryLed_Write(0);
+        }
     printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
@@ -174,7 +133,7 @@ int main()
     
     motor_stop();
     
-    printf("Press button to begin battle.\n");
+    //Get ir signal to begin battle
     
      while(pressed == 0){
         IR_val = get_IR();
@@ -190,7 +149,12 @@ int main()
   
     for(;;)
     {
-       
+        if(volts<4){  
+            BatteryLed_Write(1);
+        }
+        if(volts>=4){
+            BatteryLed_Write(0);
+        }
         reflectance_read(&ref);  //read out each period of reflectance sensors
         reflectance_digital(&dig);  //read 0 or 1 according to results of reflectance period    
         if(dig.l1 == 0 && dig.r1 == 0){ // if both of the middle sensors are on black go backwards for 500 ms
@@ -202,7 +166,7 @@ int main()
         {
             motor_sharpleft(SPEED,SPEED,100);
             CyDelay(100);
-             motor_forward(SPEED,200);
+            motor_forward(SPEED,200);
             CyDelay(200);
         }
         else if(dig.l3 == 0) //if only the far left sensor is on black turn right sharp for 100  ms or 90 degrees
@@ -211,7 +175,6 @@ int main()
             CyDelay(100);
             motor_forward(SPEED,200);
             CyDelay(200);
-           
         }
         else if(dig.r1 == 0){ // if the right middle sensor is on black turn sharp left for 180 ms or 180 degrees
             motor_sharpleft(SPEED,SPEED,180);
@@ -224,7 +187,6 @@ int main()
             CyDelay(180);
             motor_forward(SPEED,200);
             CyDelay(200);
-            
         }
         else if(Ultra_GetDistance() <15){ // if the ultrasound gets  a distance of under 15 centimeters to an object(hopefully another zumo) then it goes straight towards it and tries to push it out
             motor_forward(SPEED,DELAY);
@@ -237,23 +199,32 @@ int main()
                 CyDelay(DELAY);
             }
             else if(mode == 1|| mode == 2){// go straight forward
-            motor_turn(SPEED,SPEED,DELAY);
-            CyDelay(DELAY);
+                motor_turn(SPEED,SPEED,DELAY);
+                CyDelay(DELAY);
             }
             else if(mode == 4){// spin in place towards the right
-            motor_sharpright(SPEED,SPEED,DELAY);
-             CyDelay(DELAY);
+                motor_sharpright(SPEED,SPEED,DELAY);
+                CyDelay(DELAY);
+            
             }
             else if(mode == 5){ // turn in a small circle to the left
-            motor_sharpleft(50,SPEED,DELAY);
-             CyDelay(DELAY);
+                motor_sharpleft(50,SPEED,DELAY);
+                CyDelay(DELAY);
             }
              else if(mode == 6){ // turn in a small circle towards the right
-            motor_sharpright(SPEED,50,DELAY);
-             CyDelay(DELAY);
+                motor_sharpright(SPEED,50,DELAY);
+                CyDelay(DELAY);
             }
             if(r>0 && r<7){// if the mode exists go set mode to the value of r
-            mode = r; 
+                mode = r; 
+            
+                ADC_Battery_StartConvert();
+            
+                if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
+                    adcresult = ADC_Battery_GetResult16();
+                    volts = (float32)adcresult*7.522/4095;
+        }
+                
             }
         }
     }
