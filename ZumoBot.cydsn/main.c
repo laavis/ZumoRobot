@@ -50,6 +50,7 @@ int rread(void);
  * @details  ** You should enable global interrupt for operating properly. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
+//check state of sensors and set action accordingly
 void checkState(int *state, uint16 *l1,uint16 *r1); //decleration
 
 # define DELAY 1
@@ -71,7 +72,7 @@ int main()
     int16 adcresult =0;
     float volts = 0.0;
     int boolean = 0;
-     ADC_Battery_StartConvert();
+    ADC_Battery_StartConvert();
         
         if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for get ADC converted value
             adcresult = ADC_Battery_GetResult16();
@@ -83,38 +84,39 @@ int main()
         else{
            BatteryLed_Write(0);
         }
-    printf("\nPress button while on white.\n");
+        
+    //printf("\nPress button while on white.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
         reflectance_read(&white);
         printf("%5d %5d %5d %5d\r", white.l3, white.l1, white.r1, white.r3);
     }
-    IR_led_Write(0);
-
-    CyDelay(1000);  //wait 5 sec so that user does not read black as well by accident
     
+    IR_led_Write(0);
+    CyDelay(1000);  //wait 5 sec so that user does not read black as well by accident
     IR_led_Write(1);
-    printf("\nPress button while on black.\n");
+    
+    //printf("\nPress button while on black.\n");
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
         reflectance_read(&black);
         printf("%5d %5d %5d %5d\r", black.l3, black.l1, black.r1, black.r3);
     }
+    
     IR_led_Write(0);
     
     //calculate and set sensor thresholds
     reflectance_set_threshold(white.l3 + (black.l3 - white.l3)/2 ,white.l1 + (black.l1 - white.l1)/2 ,white.r1 + (black.r1 - white.r1)/2 ,white.r3 + (black.r3 - white.r3)/2);
     
     CyDelay(1000);
-    
     IR_led_Write(1);
-    printf("Press button to drive to startline.\n");
+    
+    //printf("Press button to drive to startline.\n");
     while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
     }
     
     CyDelay(500);
-    
     IR_led_Write(1);
     motor_start();
     
@@ -125,21 +127,19 @@ int main()
     
     motor_stop();
     
-    printf("Get ir signal to start race.\n");
+    //printf("Get ir signal to start race.\n");
     while(pressed == 0){
-    IR_val = get_IR();
+        IR_val = get_IR();
         if(IR_val){
             pressed = 1;
         }
     }
-    int stop = 0;
-    int currentState;
-    int onLine =0;
+    
+    int stop = 0, currentState, onLine =0, leftSpeed = 0, rightSpeed = 0;
     float leftDiv, rightDiv;
     motor_start();
-    int leftSpeed = 0, rightSpeed = 0;
     
-    motor_turn(SPEED, SPEED, 200);
+    motor_turn(SPEED, SPEED, 200); //to get off the startline.
     
     for(;;)
     {
@@ -149,14 +149,15 @@ int main()
         else{
              BatteryLed_Write(0);
         }
+        
         reflectance_read(&ref);//print out each period of reflectance sensors  
         reflectance_digital(&dig);      //print out 0 or 1 according to results of reflectance period
         checkState(&currentState, &dig.l1, &dig.r1); //0 == turn right, 1 == turn left.
+        
         if (ref.l1 > ref.r1) { // adjust the values of the turn speeds depending on the sharpness of the turn by creating leftDiv and rightDiv
             leftDiv = ((float)ref.r1 / ref.l1);
             rightDiv = 1;
-        }
-        else {
+        } else {
             rightDiv = ((float)ref.l1 / ref.r1);
             leftDiv = 1;
         }
@@ -164,15 +165,17 @@ int main()
         if(dig.r3 == 0 && dig.l3 == 0 && onLine == 0 ) // when the leftmost and the rightmost and the zumo enter the black line, if it is the last line the zumo stops
         {
             stop++;
-            onLine =1;
+            onLine = 1;
             if(stop >= 2){
                 motor_stop();
             }
         }
+        
         if(dig.r3 == 1 && dig.l3 == 1 && onLine == 1) // when the outer sensers of the zumo go on white after the black line set onLine to 0
         {
             onLine = 0;   
         }
+        
         if (currentState == 0) { //turn right sharp
             leftSpeed = SPEED;
             rightSpeed = SPEED/4;
