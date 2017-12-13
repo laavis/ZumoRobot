@@ -41,7 +41,7 @@ void motor_forward(uint8 speed,uint32 delay)
     CyDelay(delay);
 }
 /*
-* @brief Moving one left motor backwards and right motor forward to make a sharp turn
+* @brief Moving left motor backwards and right motor forward to make a sharp turn
 * @param    uint8 l_speed : left motor speed value
 * @param    uint8 r_speed : right motor speed value
 * @param    uint32 delay : delay time
@@ -55,7 +55,7 @@ void motor_sharpleft(uint8 l_speed,uint8 r_speed, uint32 delay)
     CyDelay(delay);
 }
 /*
-* @brief Moving one right motor backwards and left motor forward to make a sharp turn
+* @brief Moving right motor backwards and left motor forward to make a sharp turn
 * @param    uint8 l_speed : left motor speed value
 * @param    uint8 r_speed : right motor speed value
 * @param    uint32 delay : delay time

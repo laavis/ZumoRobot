@@ -85,7 +85,7 @@ int main()
            BatteryLed_Write(0);
         }
         
-    //printf("\nPress button while on white.\n");
+    //Press button while on white
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
         reflectance_read(&white);
@@ -96,7 +96,7 @@ int main()
     CyDelay(1000);  //wait 5 sec so that user does not read black as well by accident
     IR_led_Write(1);
     
-    //printf("\nPress button while on black.\n");
+    //Press button while on black
     while (SW1_Read() == 1) { //read the center button: 0 is pressed and 1 is not
         CyDelay(10);
         reflectance_read(&black);
@@ -111,7 +111,7 @@ int main()
     CyDelay(1000);
     IR_led_Write(1);
     
-    //printf("Press button to drive to startline.\n");
+    //Press button to drive to startline
     while(SW1_Read() == 1) {    //wait till button is pressed
         CyDelay(10);
     }
@@ -127,7 +127,7 @@ int main()
     
     motor_stop();
     
-    //printf("Get ir signal to start race.\n");
+    //Get ir signal to start race
     while(pressed == 0){
         IR_val = get_IR();
         if(IR_val){
@@ -171,7 +171,7 @@ int main()
             }
         }
         
-        if(dig.r3 == 1 && dig.l3 == 1 && onLine == 1) // when the outer sensers of the zumo go on white after the black line set onLine to 0
+        if(dig.r3 == 1 && dig.l3 == 1 && onLine == 1) // when the outer sensors of the zumo go on white after the black line set onLine to 0
         {
             onLine = 0;   
         }
